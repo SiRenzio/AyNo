@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Reminder;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -44,6 +45,14 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'active_notifications' => fn () => $request->user()
+                    ? Reminder::query()
+                        ->where('status', 'pending')
+                        ->whereHas('event', fn ($query) => $query
+                            ->where('user_id', $request->user()->id)
+                            ->where('status', 'upcoming'))
+                        ->count()
+                    : 0,
             ],
         ]);
     }

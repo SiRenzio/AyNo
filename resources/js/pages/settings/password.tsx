@@ -49,7 +49,7 @@ export default function Password() {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs} className="bg-slate-50 dark:bg-[#030817]">
             <Head title="Profile settings" />
 
             <SettingsLayout>
@@ -108,7 +108,7 @@ export default function Password() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save password</Button>
+                            <Button disabled={processing} className="bg-blue-600 text-white hover:bg-blue-500">Save password</Button>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -117,7 +117,7 @@ export default function Password() {
                                 leave="transition ease-in-out"
                                 leaveTo="opacity-0"
                             >
-                                <p className="text-sm text-neutral-600">Saved</p>
+                                <p className="text-sm font-medium text-emerald-500">Saved</p>
                             </Transition>
                         </div>
                     </form>

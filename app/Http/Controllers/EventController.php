@@ -82,6 +82,72 @@ class EventController extends Controller
         ]);
     }
 
+    public function edit(Request $request, Event $event): Response
+    {
+        $this->ensureOwner($request, $event);
+
+        return Inertia::render('events/edit', ['event' => [
+            'id' => $event->id,
+            'title' => $event->title,
+            'location' => $event->location,
+            'notes' => $event->notes,
+            'starts_at' => $event->starts_at->format('Y-m-d\TH:i'),
+            'status' => $event->status,
+        ]]);
+    }
+
+    public function update(Request $request, Event $event): RedirectResponse
+    {
+        $this->ensureOwner($request, $event);
+        abort_if(in_array($event->status, ['completed', 'cancelled'], true), 422, 'Completed or cancelled events cannot be edited.');
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'starts_at' => ['required', 'date', 'after:now'],
+        ]);
+
+        DB::transaction(function () use ($event, $data): void {
+            $event->update($data);
+            $startsAt = Carbon::parse($data['starts_at']);
+            $event->reminders()->where('status', 'pending')->get()->each(function ($reminder) use ($startsAt): void {
+                if ($reminder->type === 'offset') {
+                    $remindAt = $startsAt->copy()->subMinutes($reminder->offset_minutes);
+                    $reminder->update(['remind_at' => $remindAt, 'status' => $remindAt->isFuture() ? 'pending' : 'cancelled']);
+                } elseif ($reminder->remind_at->isAfter($startsAt)) {
+                    $reminder->update(['status' => 'cancelled']);
+                }
+            });
+        });
+
+        return to_route('events.show', $event)->with('success', 'Event updated successfully.');
+    }
+
+    public function updateStatus(Request $request, Event $event): RedirectResponse
+    {
+        $this->ensureOwner($request, $event);
+        abort_if(in_array($event->status, ['completed', 'cancelled'], true), 422, 'This event already has a final status.');
+        $data = $request->validate(['status' => ['required', 'in:completed,cancelled']]);
+
+        DB::transaction(function () use ($event, $data): void {
+            $event->update([
+                'status' => $data['status'],
+                'completed_at' => $data['status'] === 'completed' ? now() : null,
+            ]);
+            $event->reminders()->where('status', 'pending')->update(['status' => 'cancelled']);
+        });
+
+        return back()->with('success', $data['status'] === 'completed' ? 'Event marked complete.' : 'Event cancelled.');
+    }
+
+    public function destroy(Request $request, Event $event): RedirectResponse
+    {
+        $this->ensureOwner($request, $event);
+        $event->delete();
+
+        return to_route('events.index')->with('success', 'Event permanently deleted.');
+    }
+
     public function store(StoreEventRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -116,5 +182,10 @@ class EventController extends Controller
         });
 
         return to_route('events.index')->with('success', 'Event created successfully.');
+    }
+
+    private function ensureOwner(Request $request, Event $event): void
+    {
+        abort_unless($event->user_id === $request->user()->id, 404);
     }
 }

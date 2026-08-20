@@ -1,7 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Bell, CalendarClock, Check, ChevronLeft, Clock3, MapPin, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Bell, CalendarClock, Check, CheckCircle2, ChevronLeft, Clock3, MapPin, Minus, Pencil, Plus, Trash2, XCircle } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 interface ChecklistItem {
@@ -50,6 +51,7 @@ export default function EventShow({ event }: Props) {
     const progress = event.checklist_items.length ? Math.round((completed / event.checklist_items.length) * 100) : 0;
     const checklistForm = useForm({ description: '' });
     const [customReminder, setCustomReminder] = useState('');
+    const [pendingAction, setPendingAction] = useState<'complete' | 'cancel' | 'delete' | null>(null);
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Event Management', href: '/events' },
         { title: event.title, href: `/events/${event.id}` },
@@ -61,6 +63,17 @@ export default function EventShow({ event }: Props) {
     };
     const addReminder = (offset: number) => {
         router.post(route('reminders.store', event.id), { offset_minutes: offset }, { preserveScroll: true });
+    };
+    const confirmation = pendingAction === 'complete'
+        ? { title: 'Complete this event?', description: 'The event will be marked complete and all pending reminders will be cancelled.', label: 'Complete event', tone: 'bg-emerald-600 hover:bg-emerald-500', icon: CheckCircle2 }
+        : pendingAction === 'cancel'
+          ? { title: 'Cancel this event?', description: 'The event will be cancelled and no pending reminders will be delivered.', label: 'Cancel event', tone: 'bg-amber-500 hover:bg-amber-400', icon: XCircle }
+          : { title: 'Permanently delete event?', description: 'The event, checklist items, and reminders will be permanently deleted. This cannot be undone.', label: 'Delete permanently', tone: 'bg-red-600 hover:bg-red-500', icon: Trash2 };
+    const confirmAction = () => {
+        if (pendingAction === 'delete') router.delete(route('events.destroy', event.id));
+        if (pendingAction === 'complete') router.patch(route('events.status.update', event.id), { status: 'completed' });
+        if (pendingAction === 'cancel') router.patch(route('events.status.update', event.id), { status: 'cancelled' });
+        setPendingAction(null);
     };
 
     return (
@@ -75,18 +88,59 @@ export default function EventShow({ event }: Props) {
                         <ChevronLeft className="size-4" />
                         Back to events
                     </Link>
-                    <header className="mb-6 flex items-start justify-between gap-4">
-                        <div>
+                    <header className="relative mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row">
+                        <div className="min-w-0 pr-24 sm:pr-0">
                             <div className="mb-2 flex items-center gap-2">
                                 <span
-                                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${event.status === 'overdue' ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : event.status === 'completed' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-blue-500/30 bg-blue-500/10 text-blue-400'}`}
+                                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${event.status === 'overdue' ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : event.status === 'completed' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : event.status === 'cancelled' ? 'border-slate-500/30 bg-slate-500/10 text-slate-400' : 'border-blue-500/30 bg-blue-500/10 text-blue-400'}`}
                                 >
                                     {event.status}
                                 </span>
                             </div>
                             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{event.title}</h1>
                         </div>
+                        <div className="absolute top-0 right-0 flex gap-2 sm:hidden">
+                            {!['completed', 'cancelled'].includes(event.status) && (
+                                <Link href={route('events.edit', event.id)} aria-label="Edit event" title="Edit event" className="flex size-10 items-center justify-center rounded-xl border border-slate-300 text-slate-600 transition hover:border-blue-500/50 hover:text-blue-500 dark:border-slate-700 dark:text-slate-300"><Pencil className="size-4" /></Link>
+                            )}
+                            <button onClick={() => setPendingAction('delete')} aria-label="Delete event" title="Delete event" className="flex size-10 items-center justify-center rounded-xl border border-red-500/40 text-red-500 transition hover:bg-red-500/10"><Trash2 className="size-4" /></button>
+                        </div>
+                        {!['completed', 'cancelled'].includes(event.status) && (
+                            <div className="flex w-full gap-2 sm:hidden">
+                                <button onClick={() => setPendingAction('complete')} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white"><CheckCircle2 className="size-4" />Complete</button>
+                                <button onClick={() => setPendingAction('cancel')} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-amber-500/40 px-3 text-xs font-semibold text-amber-500"><XCircle className="size-4" />Cancel</button>
+                            </div>
+                        )}
+                        <div className="hidden flex-wrap gap-2 sm:flex sm:w-auto sm:justify-end">
+                            {!['completed', 'cancelled'].includes(event.status) && <>
+                                <Link href={route('events.edit', event.id)} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-semibold sm:flex-none dark:border-slate-700"><Pencil className="size-4" />Edit</Link>
+                                <button onClick={() => setPendingAction('complete')} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white sm:flex-none"><CheckCircle2 className="size-4" />Complete</button>
+                                <button onClick={() => setPendingAction('cancel')} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-amber-500/40 px-3 text-xs font-semibold text-amber-500 sm:flex-none"><XCircle className="size-4" />Cancel</button>
+                            </>}
+                            <button onClick={() => setPendingAction('delete')} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/40 px-3 text-xs font-semibold text-red-500 sm:flex-none"><Trash2 className="size-4" />Delete</button>
+                        </div>
                     </header>
+
+                    <Dialog open={pendingAction !== null} onOpenChange={(open) => !open && setPendingAction(null)}>
+                        <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-2xl border-slate-200 bg-white p-0 text-slate-950 shadow-2xl dark:border-slate-700 dark:bg-[#091122] dark:text-white">
+                            <div className="p-6">
+                                <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                                    <AlertTriangle className="size-5" />
+                                </span>
+                                <DialogTitle className="text-xl">{confirmation.title}</DialogTitle>
+                                <DialogDescription className="mt-2 leading-6 text-slate-600 dark:text-slate-300">{confirmation.description}</DialogDescription>
+                            </div>
+                            <DialogFooter className="gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:space-x-0 dark:border-slate-800 dark:bg-white/[0.02]">
+                                <DialogClose asChild>
+                                    <button className="h-11 rounded-xl border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-white/5">Keep event</button>
+                                </DialogClose>
+                                <button onClick={confirmAction} className={`flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition ${confirmation.tone}`}>
+                                    <confirmation.icon className="size-4" />
+                                    {confirmation.label}
+                                </button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     <section className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2 sm:p-6 dark:border-slate-800 dark:bg-[#091122]">
                         <div>
@@ -232,8 +286,26 @@ export default function EventShow({ event }: Props) {
                                         value={customReminder}
                                         onChange={(e) => setCustomReminder(e.target.value)}
                                         placeholder="Custom minutes before"
-                                        className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-xs outline-none placeholder:text-slate-500 focus:border-blue-500 dark:border-slate-700 dark:bg-[#080f20] dark:text-slate-400"
+                                        className="h-10 w-full appearance-none rounded-lg border border-slate-300 bg-slate-50 pr-20 pl-9 text-xs outline-none placeholder:text-slate-500 focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-slate-700 dark:bg-[#080f20] dark:text-slate-400"
                                     />
+                                    <div className="absolute top-1/2 right-1 flex -translate-y-1/2 overflow-hidden rounded-md border border-slate-300 dark:border-slate-700">
+                                        <button
+                                            type="button"
+                                            aria-label="Decrease reminder minutes"
+                                            onClick={() => setCustomReminder(String(Math.max(1, Number(customReminder || 1) - 1)))}
+                                            className="flex size-7 items-center justify-center text-slate-500 transition hover:bg-blue-500/10 hover:text-blue-500 dark:text-slate-400"
+                                        >
+                                            <Minus className="size-3" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label="Increase reminder minutes"
+                                            onClick={() => setCustomReminder(String(Number(customReminder || 0) + 1))}
+                                            className="flex size-7 items-center justify-center border-l border-slate-300 text-slate-500 transition hover:bg-blue-500/10 hover:text-blue-500 dark:border-slate-700 dark:text-slate-400"
+                                        >
+                                            <Plus className="size-3" />
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     type="button"

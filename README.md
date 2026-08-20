@@ -72,7 +72,42 @@ Personal Reminder Checklist
         - Built event management with search, status filtering, sorting, card-list view, and monthly calendar view.
         - Connected the dashboard to event data and added event details with interactive checklist and reminder management.
         - Added responsive light and dark themes, higher-contrast text, scalable management menus, and dashboard-style event labels.
+        - Built notification management with status filtering, cancellation, retry, deletion, and event links.
+        - Refined the notification cards and filter controls for clear, touch-friendly mobile layouts.
+        - Replaced native number-input spinners with consistent themed increment and decrement controls.
+        - Added scheduled due-reminder discovery with unique queued delivery jobs, retry handling, and duplicate-dispatch prevention.
+        - Added reminder emails with timezone-aware event details, location, notes, checklist states, and a secure event link.
+        - Added event editing, completion, cancellation, permanent deletion, and automatic cancellation of pending reminders.
+        - Installed Laravel Reverb with Laravel Echo and integrated the WebSocket server into the local development command.
 
 # TODO
 
-    - Build notification management.
+    - Reminder scheduling
+        A user can add multiple reminders to one event. The MVP uses email as the delivery channel.
+        - Presets: one day, two hours, one hour, or thirty minutes before the event.
+        - A custom date and time may also be selected.
+        - Reminder states: Pending, Sent, Failed, and Cancelled.
+        - Users can add, change, remove, and inspect pending reminders.
+        - Laravel's scheduler finds due reminders; queued jobs deliver them.
+        - A reminder is marked Sent only after successful delivery.
+        - Completed, cancelled, or deleted events cannot produce new deliveries.
+        - Preset reminders are stored as offsets; custom reminders are stored as exact times.
+        Acceptance criteria
+        - A reminder cannot be scheduled after its event or in the past.
+        - A due reminder sends an email to the event owner.
+        - Scheduler reruns and job retries do not create duplicate emails.
+        - Failed reminders may be retried safely
+
+    - Email reminder content
+        - User's name, event title, event date/time, and optional location.
+        - Optional event notes and the complete checklist with completion states.
+        - A secure link that opens the event after authentication.
+        - Dates formatted in the user's configured timezone.
+        Reminder: Claim Your Diploma
+        Your event is scheduled for August 25 at 9:00 AM.
+        Location: University Registrar
+        Things to bring:
+        [x] Valid ID
+        [ ] Official receipt
+        [ ] Claim stub
+        View Checklist
