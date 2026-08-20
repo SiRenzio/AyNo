@@ -1,0 +1,13 @@
+{
+    "intelephense.files.exclude": [
+        "**/.git/**",
+        "**/node_modules/**",
+        "**/vendor/**/tests/**"
+    ],
+    "files.watcherExclude": {
+        "**/vendor/**/tests/**": true
+    },
+    "search.exclude": {
+        "**/vendor/**/tests/**": true
+    }
+}
