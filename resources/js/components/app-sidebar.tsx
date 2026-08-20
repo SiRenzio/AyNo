@@ -31,7 +31,7 @@ export function AppSidebar() {
             <SidebarHeader className="border-sidebar-border/70 border-b px-2 py-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild className="rounded-xl">
+                        <SidebarMenuButton size="lg" asChild className="rounded-xl group-data-[collapsible=icon]:justify-center">
                             <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
