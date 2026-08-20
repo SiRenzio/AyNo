@@ -7,6 +7,9 @@
     "files.watcherExclude": {
         "**/vendor/**/tests/**": true
     },
+    "files.exclude": {
+        "**/vendor/**/tests": true
+    },
     "search.exclude": {
         "**/vendor/**/tests/**": true
     }
