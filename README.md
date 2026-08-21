@@ -79,6 +79,21 @@ Personal Reminder Checklist
         - Added reminder emails with timezone-aware event details, location, notes, checklist states, and a secure event link.
         - Added event editing, completion, cancellation, permanent deletion, and automatic cancellation of pending reminders.
         - Installed Laravel Reverb with Laravel Echo and integrated the WebSocket server into the local development command.
+    - 21/08/2026
+        - Started the AyNo React Native application with Expo SDK 57 and Expo Router.
+        - Added Sanctum token authentication and ownership-scoped mobile API endpoints for events and checklists.
+        - Added secure mobile sessions, registration, login, event and reminder views, checklist updates, event completion/cancellation, and profile sign-out.
+
+# React Native app
+
+The Expo application lives in `mobile/` and uses the same users, events, checklists, and reminders as the Laravel web application.
+
+1. Copy `mobile/.env.example` to `mobile/.env`.
+2. Start Laravel so the device can reach it: `php artisan serve --host=0.0.0.0 --port=8000`.
+3. For a physical phone, replace `10.0.2.2` in `mobile/.env` with this computer's LAN IP. Android emulators can use the example value as-is.
+4. In a second terminal, run `cd mobile` and `npm start`, then open the app in Expo Go or an emulator.
+
+Mobile access tokens are stored with Expo SecureStore. Run `php artisan migrate` after pulling the mobile API changes so Sanctum's token table is available.
 
 # TODO
 
