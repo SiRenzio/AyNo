@@ -83,6 +83,7 @@ Personal Reminder Checklist
         - Started the AyNo React Native application with Expo SDK 57 and Expo Router.
         - Added Sanctum token authentication and ownership-scoped mobile API endpoints for events and checklists.
         - Added secure mobile sessions, registration, login, event and reminder views, checklist updates, event completion/cancellation, and profile sign-out.
+        - Converted the responsive web workflow into native dashboard, event creation, template, checklist, reminder, search/filter, edit, status, delete, notification-management, profile, and password screens.
 
 # React Native app
 

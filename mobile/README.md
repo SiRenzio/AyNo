@@ -36,3 +36,18 @@ Tunnel mode fixes Metro access on networks that block device-to-device traffic, 
 ## Android emulator
 
 The default `.env.example` address, `10.0.2.2`, points from the Android emulator to the host computer.
+
+## Android development build
+
+Native notifications require an AyNo development build; Expo Go no longer includes Android notification support. Sign in to an Expo account, then build and install the APK:
+
+```powershell
+npx eas-cli login
+npm run build:android:dev
+```
+
+After installing the generated APK on the phone, start Metro with:
+
+```powershell
+npm run start:dev-client
+```

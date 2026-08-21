@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -53,6 +54,28 @@ class MobileAuthController extends Controller
     {
         $request->user()->currentAccessToken()?->delete();
         return response()->json(['message' => 'Signed out.']);
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($request->user()->id)],
+        ]);
+        $request->user()->update($data);
+
+        return $this->me($request);
+    }
+
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+        $request->user()->update(['password' => $data['password']]);
+
+        return response()->json(['message' => 'Password updated.']);
     }
 
     private function tokenResponse(User $user, string $deviceName): array
