@@ -96,34 +96,7 @@ The Expo application lives in `mobile/` and uses the same users, events, checkli
 
 Mobile access tokens are stored with Expo SecureStore. Run `php artisan migrate` after pulling the mobile API changes so Sanctum's token table is available.
 
+adb install -r "/c/Users/cjgas/Documents/Laravel Projects/AyNo/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+
 # TODO
-
-    - Reminder scheduling
-        A user can add multiple reminders to one event. The MVP uses email as the delivery channel.
-        - Presets: one day, two hours, one hour, or thirty minutes before the event.
-        - A custom date and time may also be selected.
-        - Reminder states: Pending, Sent, Failed, and Cancelled.
-        - Users can add, change, remove, and inspect pending reminders.
-        - Laravel's scheduler finds due reminders; queued jobs deliver them.
-        - A reminder is marked Sent only after successful delivery.
-        - Completed, cancelled, or deleted events cannot produce new deliveries.
-        - Preset reminders are stored as offsets; custom reminders are stored as exact times.
-        Acceptance criteria
-        - A reminder cannot be scheduled after its event or in the past.
-        - A due reminder sends an email to the event owner.
-        - Scheduler reruns and job retries do not create duplicate emails.
-        - Failed reminders may be retried safely
-
-    - Email reminder content
-        - User's name, event title, event date/time, and optional location.
-        - Optional event notes and the complete checklist with completion states.
-        - A secure link that opens the event after authentication.
-        - Dates formatted in the user's configured timezone.
-        Reminder: Claim Your Diploma
-        Your event is scheduled for August 25 at 9:00 AM.
-        Location: University Registrar
-        Things to bring:
-        [x] Valid ID
-        [ ] Official receipt
-        [ ] Claim stub
-        View Checklist
+    Convert to standalone app that uses device storage for storing data.

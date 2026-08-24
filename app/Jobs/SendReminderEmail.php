@@ -31,30 +31,24 @@ class SendReminderEmail implements ShouldBeUnique, ShouldQueue
 
     public function handle(): void
     {
-        $reminder = DB::transaction(function () {
+        DB::transaction(function (): void {
             $reminder = Reminder::query()->with(['event.user', 'event.checklistItems'])
                 ->lockForUpdate()->find($this->reminderId);
 
             if (! $reminder || $reminder->status !== 'pending' || $reminder->event->status !== 'upcoming') {
-                return null;
+                return;
             }
 
             if (! $reminder->event->user->email_notifications_enabled) {
                 $reminder->update(['status' => 'cancelled']);
-                return null;
+                return;
             }
 
-            return $reminder;
+            $reminder->event->user->notify(new EventReminderNotification($reminder));
+            $reminder->update([
+                'status' => 'sent', 'sent_at' => now(), 'failed_at' => null, 'failure_reason' => null,
+            ]);
         });
-
-        if (! $reminder) {
-            return;
-        }
-
-        $reminder->event->user->notify(new EventReminderNotification($reminder));
-        Reminder::query()->whereKey($this->reminderId)->where('status', 'pending')->update([
-            'status' => 'sent', 'sent_at' => now(), 'failed_at' => null, 'failure_reason' => null,
-        ]);
     }
 
     public function failed(?Throwable $exception): void

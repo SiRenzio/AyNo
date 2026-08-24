@@ -12,6 +12,7 @@ class MobileChecklistItemController extends Controller
     public function store(Request $request, \App\Models\Event $event): JsonResponse
     {
         abort_unless($event->user_id === $request->user()->id, 404);
+        abort_unless($event->status === 'upcoming', 422, 'Checklist items can only be added to active events.');
         $data = $request->validate(['description' => ['required', 'string', 'max:255']]);
         $item = $event->checklistItems()->create([
             'description' => $data['description'],

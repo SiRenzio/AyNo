@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MobileNotificationsUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Reminder;
@@ -46,6 +47,7 @@ class MobileEventController extends Controller
             ->with('event:id,title,location,starts_at')->latest('remind_at')->get()->map(fn ($reminder) => [
                 'id' => $reminder->id, 'remind_at' => $reminder->remind_at->toIso8601String(),
                 'status' => $reminder->status, 'channel' => $reminder->channel,
+                'read_at' => $reminder->read_at?->toIso8601String(),
                 'event' => ['id' => $reminder->event->id, 'title' => $reminder->event->title, 'location' => $reminder->event->location, 'starts_at' => $reminder->event->starts_at->toIso8601String()],
             ]);
 
@@ -86,9 +88,34 @@ class MobileEventController extends Controller
         return response()->json(['message' => 'Reminder deleted.']);
     }
 
+    public function markNotificationsRead(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => ['nullable', 'array'], 'ids.*' => ['integer', 'distinct']]);
+        $query = Reminder::whereHas('event', fn ($event) => $event->where('user_id', $request->user()->id))
+            ->where('remind_at', '<=', now())->whereNull('read_at');
+        if (! empty($data['ids'])) {
+            $query->whereIn('id', $data['ids']);
+        }
+        $updated = $query->update(['read_at' => now()]);
+        broadcast(new MobileNotificationsUpdated($request->user()->id));
+
+        return response()->json(['message' => 'Notifications marked as read.', 'updated' => $updated]);
+    }
+
+    public function destroyNotifications(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => ['required', 'array', 'min:1'], 'ids.*' => ['integer', 'distinct']]);
+        $deleted = Reminder::whereHas('event', fn ($event) => $event->where('user_id', $request->user()->id))
+            ->whereIn('id', $data['ids'])->delete();
+        broadcast(new MobileNotificationsUpdated($request->user()->id));
+
+        return response()->json(['message' => 'Notifications deleted.', 'deleted' => $deleted]);
+    }
+
     public function storeReminder(Request $request, Event $event): JsonResponse
     {
         $this->ensureOwner($request, $event);
+        abort_unless($event->status === 'upcoming', 422, 'Reminders can only be added to active events.');
         $data = $request->validate(['offset_minutes' => ['required', 'integer', 'min:1', 'max:525600']]);
         $remindAt = $event->starts_at->copy()->subMinutes($data['offset_minutes']);
         abort_unless($remindAt->isFuture(), 422, 'The reminder time must be in the future.');
@@ -108,7 +135,7 @@ class MobileEventController extends Controller
             'checklistItems',
             'checklistItems as completed_checklist_items_count' => fn ($query) => $query->where('is_completed', true),
             'reminders as pending_reminders_count' => fn ($query) => $query->where('status', 'pending'),
-        ])->orderBy('starts_at')->get()->map(fn (Event $event) => $this->summary($event));
+        ])->latest('updated_at')->get()->map(fn (Event $event) => $this->summary($event));
 
         return response()->json(['events' => $events]);
     }
@@ -183,7 +210,7 @@ class MobileEventController extends Controller
 
         DB::transaction(function () use ($event, $data) {
             $event->update(['status' => $data['status'], 'completed_at' => $data['status'] === 'completed' ? now() : null]);
-            $event->reminders()->where('status', 'pending')->update(['status' => 'cancelled']);
+            $event->resolveReminders();
         });
 
         return response()->json(['event' => $this->summary($event->refresh())]);
@@ -213,7 +240,10 @@ class MobileEventController extends Controller
     public function destroy(Request $request, Event $event): JsonResponse
     {
         $this->ensureOwner($request, $event);
-        $event->delete();
+        DB::transaction(function () use ($event): void {
+            $event->resolveReminders();
+            $event->delete();
+        });
         return response()->json(['message' => 'Event permanently deleted.']);
     }
 

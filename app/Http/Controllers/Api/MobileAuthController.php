@@ -16,14 +16,15 @@ class MobileAuthController extends Controller
 {
     public function register(Request $request): JsonResponse
     {
+        $request->merge(['username' => strtolower((string) $request->input('username'))]);
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'min:3', 'max:30', 'alpha_dash', 'lowercase', 'unique:users,username'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'device_name' => ['required', 'string', 'max:255'],
         ]);
 
-        $user = User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password']]);
+        $user = User::create(['name' => $data['username'], 'username' => $data['username'], 'email' => $data['email'], 'password' => $data['password']]);
         event(new Registered($user));
 
         return response()->json($this->tokenResponse($user, $data['device_name']), 201);
@@ -32,14 +33,15 @@ class MobileAuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
             'device_name' => ['required', 'string', 'max:255'],
         ]);
-        $user = User::where('email', $data['email'])->first();
+        $login = strtolower($data['login']);
+        $user = User::whereRaw('LOWER(email) = ?', [$login])->orWhere('username', $login)->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages(['email' => ['The provided credentials are incorrect.']]);
+            throw ValidationException::withMessages(['login' => ['The provided credentials are incorrect.']]);
         }
 
         return response()->json($this->tokenResponse($user, $data['device_name']));
@@ -47,7 +49,7 @@ class MobileAuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(['user' => $request->user()->only('id', 'name', 'email', 'timezone')]);
+        return response()->json(['user' => $request->user()->only('id', 'name', 'username', 'email', 'timezone')]);
     }
 
     public function logout(Request $request): JsonResponse
@@ -82,7 +84,7 @@ class MobileAuthController extends Controller
     {
         return [
             'token' => $user->createToken($deviceName, ['mobile'])->plainTextToken,
-            'user' => $user->only('id', 'name', 'email', 'timezone'),
+            'user' => $user->only('id', 'name', 'username', 'email', 'timezone'),
         ];
     }
 }

@@ -6,13 +6,13 @@ import { User } from '@/lib/types';
 
 const TOKEN_KEY = 'ayno_mobile_token';
 
-type Credentials = { email: string; password: string };
+type Credentials = { login: string; password: string };
 type AuthContextValue = {
   token: string | null;
   user: User | null;
   loading: boolean;
   signIn: (data: Credentials) => Promise<void>;
-  signUp: (data: Credentials & { name: string; password_confirmation: string }) => Promise<void>;
+  signUp: (data: { username: string; email: string; password: string; password_confirmation: string }) => Promise<void>;
   signOut: () => Promise<void>;
 };
 

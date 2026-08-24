@@ -64,7 +64,7 @@ export default function CreateEvent() {
     }
     return (
         <Screen>
-            <ScrollView keyboardShouldPersistTaps="handled">
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>New event</Text>
                 <Text style={styles.subtitle}>Add the details, checklist, and reminders.</Text>
                 <Field placeholder="Event title" value={title} onChangeText={setTitle} />

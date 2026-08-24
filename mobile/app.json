@@ -4,21 +4,20 @@
     "slug": "ayno-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/ayno-icon.png",
     "scheme": "ayno",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/ayno-icon.png"
     },
     "android": {
       "package": "com.ayno.mobile",
       "permissions": [
-        "SCHEDULE_EXACT_ALARM"
+        "USE_EXACT_ALARM"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
+        "backgroundColor": "#071226",
+        "foregroundImage": "./assets/images/ayno-bird.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -41,9 +40,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#071226",
+          "image": "./assets/images/ayno-bird.png",
+          "imageWidth": 150
         }
       ],
       "expo-secure-store",

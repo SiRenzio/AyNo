@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\MobileChecklistItemController;
 use App\Http\Controllers\Api\MobileEventController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 
 Route::prefix('mobile')->group(function () {
     Route::post('register', [MobileAuthController::class, 'register'])->middleware('throttle:6,1');
@@ -12,11 +13,14 @@ Route::prefix('mobile')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [MobileAuthController::class, 'me']);
         Route::post('logout', [MobileAuthController::class, 'logout']);
+        Route::post('broadcasting/auth', fn (\Illuminate\Http\Request $request) => Broadcast::auth($request));
         Route::get('events', [MobileEventController::class, 'index']);
         Route::get('dashboard', [MobileEventController::class, 'dashboard']);
         Route::get('templates', [MobileEventController::class, 'templates']);
         Route::get('notifications', [MobileEventController::class, 'notifications']);
         Route::get('push-reminders', [MobileEventController::class, 'pushReminders']);
+        Route::patch('notifications/read', [MobileEventController::class, 'markNotificationsRead']);
+        Route::delete('notifications', [MobileEventController::class, 'destroyNotifications']);
         Route::patch('notifications/{reminder}', [MobileEventController::class, 'updateNotification']);
         Route::delete('notifications/{reminder}', [MobileEventController::class, 'destroyNotification']);
         Route::post('events', [MobileEventController::class, 'store']);

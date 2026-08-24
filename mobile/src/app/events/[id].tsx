@@ -92,7 +92,7 @@ export default function EventDetails() {
         }
     }
 
-    async function removeReminder(reminderId: number) {
+    async function deleteReminder(reminderId: number) {
         if (!event) return;
         const previous = event.reminders;
         setEvent({ ...event, reminders: previous.filter((item) => item.id !== reminderId) });
@@ -103,9 +103,26 @@ export default function EventDetails() {
             setEvent({ ...event, reminders: previous });
         }
     }
+    function removeReminder(reminderId: number) {
+        Alert.alert('Delete reminder?', 'This reminder will be permanently removed.', [
+            { text: 'Keep reminder', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: () => void deleteReminder(reminderId) },
+        ]);
+    }
     async function status(value: 'completed' | 'cancelled') {
         await api(`/events/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }, token);
         router.replace('/(tabs)/home');
+    }
+    function confirmStatus(value: 'completed' | 'cancelled') {
+        const completing = value === 'completed';
+        Alert.alert(
+            completing ? 'Complete event?' : 'Cancel event?',
+            completing ? 'This will mark the event as completed and cancel its pending reminders.' : 'This will cancel the event and all pending reminders.',
+            [
+                { text: 'Not now', style: 'cancel' },
+                { text: completing ? 'Complete' : 'Cancel event', style: completing ? 'default' : 'destructive', onPress: () => void status(value).catch((error) => Alert.alert('Unable to update', error.message)) },
+            ],
+        );
     }
     function removeEvent() {
         Alert.alert('Delete event?', 'This permanently removes the event, checklist, and reminders.', [
@@ -234,7 +251,7 @@ export default function EventDetails() {
                             <Text style={{ color: colors.muted, padding: 17 }}>No checklist items yet.</Text>
                         )}
                     </View>
-                    <View style={{ flexDirection: 'row', gap: 8, padding: 17 }}>
+                    {active ? <View style={{ flexDirection: 'row', gap: 8, padding: 17 }}>
                         <Field
                             placeholder="Add checklist item…"
                             value={description}
@@ -247,7 +264,7 @@ export default function EventDetails() {
                         >
                             <Ionicons name="add" size={23} color="white" />
                         </Pressable>
-                    </View>
+                    </View> : null}
                 </View>
                 <View style={section}>
                     <View style={{ padding: 17 }}>
@@ -285,7 +302,7 @@ export default function EventDetails() {
                             <Text style={{ color: colors.muted, padding: 17 }}>No reminders scheduled.</Text>
                         )}
                     </View>
-                    <View style={{ padding: 17 }}>
+                    {active ? <View style={{ padding: 17 }}>
                         <Text style={{ color: colors.muted, fontSize: 12, marginBottom: 10 }}>Add reminder</Text>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                             {quickReminders.map((option) => (
@@ -321,18 +338,18 @@ export default function EventDetails() {
                                 <Text style={{ color: '#60a5fa', fontWeight: '700' }}>+ Add</Text>
                             </Pressable>
                         </View>
-                    </View>
+                    </View> : null}
                 </View>
                 {active ? (
                     <View style={{ marginBottom: 30 }}>
                         <Button
                             title="Mark complete"
-                            onPress={() => status('completed').catch((error) => Alert.alert('Unable to update', error.message))}
+                            onPress={() => confirmStatus('completed')}
                         />
                         <Button
                             title="Cancel event"
                             danger
-                            onPress={() => status('cancelled').catch((error) => Alert.alert('Unable to update', error.message))}
+                            onPress={() => confirmStatus('cancelled')}
                         />
                     </View>
                 ) : null}
