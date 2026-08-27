@@ -6,24 +6,31 @@ import { useAuth } from '@/context/auth-context';
 import { getNotificationsModule, notificationsAvailable, syncLocalNotifications } from '@/lib/local-notifications';
 
 export function NotificationSync() {
-  const { token } = useAuth();
-  useEffect(() => {
-    if (!notificationsAvailable) return;
-    let active = true;
-    let responseSubscription: { remove: () => void } | undefined;
-    void syncLocalNotifications(token);
-    const appState = AppState.addEventListener('change', state => { if (state === 'active') void syncLocalNotifications(token); });
-    const reminderChanges = DeviceEventEmitter.addListener('remoteNotificationsChanged', () => {
-      void syncLocalNotifications(token);
-    });
-    void getNotificationsModule().then(Notifications => {
-      if (!active) return;
-      responseSubscription = Notifications.addNotificationResponseReceivedListener(event => {
-        const url = event.notification.request.content.data?.url;
-        if (typeof url === 'string') router.push(url as never);
-      });
-    });
-    return () => { active = false; appState.remove(); reminderChanges.remove(); responseSubscription?.remove(); };
-  }, [token]);
-  return null;
+    const { token } = useAuth();
+    useEffect(() => {
+        if (!notificationsAvailable) return;
+        let active = true;
+        let responseSubscription: { remove: () => void } | undefined;
+        void syncLocalNotifications(token);
+        const appState = AppState.addEventListener('change', (state) => {
+            if (state === 'active') void syncLocalNotifications(token);
+        });
+        const reminderChanges = DeviceEventEmitter.addListener('remoteNotificationsChanged', () => {
+            void syncLocalNotifications(token);
+        });
+        void getNotificationsModule().then((Notifications) => {
+            if (!active) return;
+            responseSubscription = Notifications.addNotificationResponseReceivedListener((event) => {
+                const url = event.notification.request.content.data?.url;
+                if (typeof url === 'string') router.push(url as never);
+            });
+        });
+        return () => {
+            active = false;
+            appState.remove();
+            reminderChanges.remove();
+            responseSubscription?.remove();
+        };
+    }, [token]);
+    return null;
 }

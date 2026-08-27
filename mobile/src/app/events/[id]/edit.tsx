@@ -1,12 +1,15 @@
-import { Button, Field, Screen, colors, styles } from '@/components/native-ui';
+import { Button, Field, Screen, styles } from '@/components/native-ui';
 import { useAuth } from '@/context/auth-context';
+import { useAppTheme } from '@/context/theme-context';
 import { api } from '@/lib/api';
 import { EventDetail } from '@/lib/types';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 export default function EditEvent() {
+    const { colors } = useAppTheme();
     const { id } = useLocalSearchParams<{ id: string }>();
     const { token } = useAuth();
     const [title, setTitle] = useState('');
@@ -37,17 +40,30 @@ export default function EditEvent() {
     return (
         <Screen>
             <ScrollView showsVerticalScrollIndicator={false}>
-                <Text style={styles.title}>Edit event</Text>
-                <Text style={styles.subtitle}>Update the event details and schedule.</Text>
+                <Pressable
+                    onPress={() => router.back()}
+                    style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 16, paddingVertical: 6 }}
+                >
+                    <Ionicons name="chevron-back" size={20} color={colors.muted} />
+                    <Text style={{ color: colors.muted, fontWeight: '600' }}>Back</Text>
+                </Pressable>
+                <Text style={[styles.title, { color: colors.text }]}>Edit event</Text>
+                <Text style={[styles.subtitle, { color: colors.muted }]}>Update the event details and schedule.</Text>
                 <Field placeholder="Title" value={title} onChangeText={setTitle} />
                 <Field placeholder="Location" value={location} onChangeText={setLocation} />
                 <Field placeholder="Notes" value={notes} onChangeText={setNotes} multiline style={{ minHeight: 100, textAlignVertical: 'top' }} />
                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <Pressable style={[styles.card, { flex: 1 }]} onPress={() => setMode('date')}>
+                    <Pressable
+                        style={[styles.card, { flex: 1, backgroundColor: colors.card, borderColor: colors.border }]}
+                        onPress={() => setMode('date')}
+                    >
                         <Text style={{ color: colors.muted }}>Date</Text>
                         <Text style={{ color: colors.text }}>{date.toLocaleDateString()}</Text>
                     </Pressable>
-                    <Pressable style={[styles.card, { flex: 1 }]} onPress={() => setMode('time')}>
+                    <Pressable
+                        style={[styles.card, { flex: 1, backgroundColor: colors.card, borderColor: colors.border }]}
+                        onPress={() => setMode('time')}
+                    >
                         <Text style={{ color: colors.muted }}>Time</Text>
                         <Text style={{ color: colors.text }}>{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                     </Pressable>

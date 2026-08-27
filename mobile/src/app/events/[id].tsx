@@ -3,8 +3,9 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { Button, Field, Screen, colors, styles } from '@/components/native-ui';
+import { Button, Field, Screen, styles } from '@/components/native-ui';
 import { useAuth } from '@/context/auth-context';
+import { useAppTheme } from '@/context/theme-context';
 import { api } from '@/lib/api';
 import { formatDateTime } from '@/lib/format-date';
 import { syncLocalNotifications } from '@/lib/local-notifications';
@@ -21,6 +22,7 @@ const quickReminders = [
 const statusColors: Record<string, string> = { upcoming: '#60a5fa', overdue: '#fbbf24', completed: '#34d399', cancelled: '#94a3b8' };
 
 export default function EventDetails() {
+    const { colors } = useAppTheme();
     const { id } = useLocalSearchParams<{ id: string }>();
     const { token } = useAuth();
     const [event, setEvent] = useState<EventDetail | null>(null);
@@ -85,8 +87,8 @@ export default function EventDetails() {
                     a.remind_at.localeCompare(b.remind_at),
                 ),
             });
-        setCustomMinutes('');
-        await syncLocalNotifications(token);
+            setCustomMinutes('');
+            await syncLocalNotifications(token);
         } catch (error) {
             Alert.alert('Unable to add reminder', error instanceof Error ? error.message : 'Try again.');
         }
@@ -117,10 +119,16 @@ export default function EventDetails() {
         const completing = value === 'completed';
         Alert.alert(
             completing ? 'Complete event?' : 'Cancel event?',
-            completing ? 'This will mark the event as completed and cancel its pending reminders.' : 'This will cancel the event and all pending reminders.',
+            completing
+                ? 'This will mark the event as completed and cancel its pending reminders.'
+                : 'This will cancel the event and all pending reminders.',
             [
                 { text: 'Not now', style: 'cancel' },
-                { text: completing ? 'Complete' : 'Cancel event', style: completing ? 'default' : 'destructive', onPress: () => void status(value).catch((error) => Alert.alert('Unable to update', error.message)) },
+                {
+                    text: completing ? 'Complete' : 'Cancel event',
+                    style: completing ? 'default' : 'destructive',
+                    onPress: () => void status(value).catch((error) => Alert.alert('Unable to update', error.message)),
+                },
             ],
         );
     }
@@ -149,6 +157,13 @@ export default function EventDetails() {
     return (
         <Screen>
             <ScrollView showsVerticalScrollIndicator={false}>
+                <Pressable
+                    onPress={() => router.back()}
+                    style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 16, paddingVertical: 6 }}
+                >
+                    <Ionicons name="chevron-back" size={20} color={colors.muted} />
+                    <Text style={{ color: colors.muted, fontWeight: '600' }}>Back</Text>
+                </Pressable>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
                     <View style={{ flex: 1 }}>
                         <View
@@ -165,48 +180,48 @@ export default function EventDetails() {
                         >
                             <Text style={{ color: accent, fontSize: 11, fontWeight: '700', textTransform: 'capitalize' }}>{event.status}</Text>
                         </View>
-                        <Text style={styles.title}>{event.title}</Text>
-                        <Text style={styles.subtitle}>Everything you need for this event.</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>{event.title}</Text>
+                        <Text style={[styles.subtitle, { color: colors.muted }]}>Everything you need for this event.</Text>
                     </View>
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                         {active ? (
-                            <Pressable style={iconButton} onPress={() => router.push(`/events/${id}/edit`)}>
+                            <Pressable style={[iconButton, { borderColor: colors.border }]} onPress={() => router.push(`/events/${id}/edit`)}>
                                 <Ionicons name="pencil" size={19} color="#60a5fa" />
                             </Pressable>
                         ) : null}
-                        <Pressable style={iconButton} onPress={removeEvent}>
+                        <Pressable style={[iconButton, { borderColor: colors.border }]} onPress={removeEvent}>
                             <Ionicons name="trash-outline" size={19} color="#fb7185" />
                         </Pressable>
                     </View>
                 </View>
-                <View style={panel}>
+                <View style={[panel, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Metadata label="Date & time" icon="time-outline" value={formatDateTime(event.starts_at)} />
-                    <View style={divider} />
+                    <View style={[divider, { backgroundColor: colors.border }]} />
                     <Metadata label="Location" icon="location-outline" value={event.location ?? 'No location provided'} />
                     {event.notes ? (
                         <>
-                            <View style={divider} />
-                            <Text style={label}>NOTES</Text>
-                            <Text style={{ color: '#bfdbfe', lineHeight: 22, marginTop: 8 }}>{event.notes}</Text>
+                            <View style={[divider, { backgroundColor: colors.border }]} />
+                            <Text style={[label, { color: colors.muted }]}>NOTES</Text>
+                            <Text style={{ color: colors.text, lineHeight: 22, marginTop: 8 }}>{event.notes}</Text>
                         </>
                     ) : null}
                 </View>
-                <View style={section}>
+                <View style={[section, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={{ padding: 17 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Text style={sectionTitle}>Checklist</Text>
+                            <Text style={[sectionTitle, { color: colors.text }]}>Checklist</Text>
                             <Text style={{ color: colors.muted, fontSize: 12 }}>
                                 {completed} of {event.checklist_items.length} prepared
                             </Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 15 }}>
-                            <View style={{ height: 6, flex: 1, borderRadius: 6, backgroundColor: '#1e293b', overflow: 'hidden' }}>
+                            <View style={{ height: 6, flex: 1, borderRadius: 6, backgroundColor: colors.border, overflow: 'hidden' }}>
                                 <View style={{ width: `${progress}%`, height: 6, backgroundColor: '#3b82f6' }} />
                             </View>
                             <Text style={{ color: colors.muted, fontSize: 12 }}>{progress}%</Text>
                         </View>
                     </View>
-                    <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#1e293b' }}>
+                    <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border }}>
                         {event.checklist_items.length ? (
                             event.checklist_items.map((item) => (
                                 <Pressable
@@ -219,7 +234,7 @@ export default function EventDetails() {
                                         minHeight: 50,
                                         paddingHorizontal: 17,
                                         borderBottomWidth: 1,
-                                        borderBottomColor: '#1e293b',
+                                        borderBottomColor: colors.border,
                                     }}
                                 >
                                     <View
@@ -238,7 +253,7 @@ export default function EventDetails() {
                                     </View>
                                     <Text
                                         style={{
-                                            color: item.is_completed ? colors.muted : '#e2e8f0',
+                                            color: item.is_completed ? colors.muted : colors.text,
                                             textDecorationLine: item.is_completed ? 'line-through' : 'none',
                                             flex: 1,
                                         }}
@@ -251,27 +266,29 @@ export default function EventDetails() {
                             <Text style={{ color: colors.muted, padding: 17 }}>No checklist items yet.</Text>
                         )}
                     </View>
-                    {active ? <View style={{ flexDirection: 'row', gap: 8, padding: 17 }}>
-                        <Field
-                            placeholder="Add checklist item…"
-                            value={description}
-                            onChangeText={setDescription}
-                            style={{ flex: 1, marginBottom: 0 }}
-                        />
-                        <Pressable
-                            onPress={addChecklistItem}
-                            style={{ backgroundColor: '#2563eb', borderRadius: 11, width: 48, alignItems: 'center', justifyContent: 'center' }}
-                        >
-                            <Ionicons name="add" size={23} color="white" />
-                        </Pressable>
-                    </View> : null}
+                    {active ? (
+                        <View style={{ flexDirection: 'row', gap: 8, padding: 17 }}>
+                            <Field
+                                placeholder="Add checklist item…"
+                                value={description}
+                                onChangeText={setDescription}
+                                style={{ flex: 1, marginBottom: 0 }}
+                            />
+                            <Pressable
+                                onPress={addChecklistItem}
+                                style={{ backgroundColor: '#2563eb', borderRadius: 11, width: 48, alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <Ionicons name="add" size={23} color="white" />
+                            </Pressable>
+                        </View>
+                    ) : null}
                 </View>
-                <View style={section}>
+                <View style={[section, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={{ padding: 17 }}>
-                        <Text style={sectionTitle}>Reminders</Text>
+                        <Text style={[sectionTitle, { color: colors.text }]}>Reminders</Text>
                         <Text style={{ color: colors.muted, fontSize: 12, marginTop: 5 }}>Email reminders for this event</Text>
                     </View>
-                    <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#1e293b' }}>
+                    <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border }}>
                         {event.reminders.length ? (
                             event.reminders.map((reminder) => (
                                 <View
@@ -282,15 +299,13 @@ export default function EventDetails() {
                                         gap: 12,
                                         padding: 15,
                                         borderBottomWidth: 1,
-                                        borderBottomColor: '#1e293b',
+                                        borderBottomColor: colors.border,
                                     }}
                                 >
                                     <Ionicons name="notifications-outline" size={18} color={colors.muted} />
                                     <View style={{ flex: 1 }}>
-                                        <Text style={{ color: '#bfdbfe', fontWeight: '600' }}>{reminder.offset_minutes} minutes before</Text>
-                                        <Text style={{ color: colors.muted, fontSize: 12, marginTop: 3 }}>
-                                            {formatDateTime(reminder.remind_at)}
-                                        </Text>
+                                        <Text style={{ color: colors.text, fontWeight: '600' }}>{reminder.offset_minutes} minutes before</Text>
+                                        <Text style={{ color: colors.muted, fontSize: 12, marginTop: 3 }}>{formatDateTime(reminder.remind_at)}</Text>
                                     </View>
                                     <Text style={{ color: '#60a5fa', fontSize: 11, textTransform: 'capitalize' }}>{reminder.status}</Text>
                                     <Pressable onPress={() => removeReminder(reminder.id)}>
@@ -302,55 +317,56 @@ export default function EventDetails() {
                             <Text style={{ color: colors.muted, padding: 17 }}>No reminders scheduled.</Text>
                         )}
                     </View>
-                    {active ? <View style={{ padding: 17 }}>
-                        <Text style={{ color: colors.muted, fontSize: 12, marginBottom: 10 }}>Add reminder</Text>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                            {quickReminders.map((option) => (
+                    {active ? (
+                        <View style={{ padding: 17 }}>
+                            <Text style={{ color: colors.muted, fontSize: 12, marginBottom: 10 }}>Add reminder</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                {quickReminders.map((option) => (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => addReminder(option.value)}
+                                        style={{
+                                            borderWidth: 1,
+                                            borderColor: colors.border,
+                                            borderRadius: 9,
+                                            paddingHorizontal: 11,
+                                            paddingVertical: 9,
+                                        }}
+                                    >
+                                        <Text style={{ color: colors.text, fontSize: 12 }}>{option.label}</Text>
+                                    </Pressable>
+                                ))}
+                            </View>
+                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                                <Field
+                                    keyboardType="number-pad"
+                                    placeholder="Custom minutes before"
+                                    value={customMinutes}
+                                    onChangeText={setCustomMinutes}
+                                    style={{ flex: 1, marginBottom: 0 }}
+                                />
                                 <Pressable
-                                    key={option.value}
-                                    onPress={() => addReminder(option.value)}
-                                    style={{ borderWidth: 1, borderColor: '#334155', borderRadius: 9, paddingHorizontal: 11, paddingVertical: 9 }}
+                                    disabled={!Number(customMinutes)}
+                                    onPress={() => addReminder(Number(customMinutes))}
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: '#3b82f666',
+                                        borderRadius: 10,
+                                        paddingHorizontal: 14,
+                                        justifyContent: 'center',
+                                        opacity: Number(customMinutes) ? 1 : 0.4,
+                                    }}
                                 >
-                                    <Text style={{ color: '#bfdbfe', fontSize: 12 }}>{option.label}</Text>
+                                    <Text style={{ color: '#60a5fa', fontWeight: '700' }}>+ Add</Text>
                                 </Pressable>
-                            ))}
+                            </View>
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                            <Field
-                                keyboardType="number-pad"
-                                placeholder="Custom minutes before"
-                                value={customMinutes}
-                                onChangeText={setCustomMinutes}
-                                style={{ flex: 1, marginBottom: 0 }}
-                            />
-                            <Pressable
-                                disabled={!Number(customMinutes)}
-                                onPress={() => addReminder(Number(customMinutes))}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: '#3b82f666',
-                                    borderRadius: 10,
-                                    paddingHorizontal: 14,
-                                    justifyContent: 'center',
-                                    opacity: Number(customMinutes) ? 1 : 0.4,
-                                }}
-                            >
-                                <Text style={{ color: '#60a5fa', fontWeight: '700' }}>+ Add</Text>
-                            </Pressable>
-                        </View>
-                    </View> : null}
+                    ) : null}
                 </View>
                 {active ? (
                     <View style={{ marginBottom: 30 }}>
-                        <Button
-                            title="Mark complete"
-                            onPress={() => confirmStatus('completed')}
-                        />
-                        <Button
-                            title="Cancel event"
-                            danger
-                            onPress={() => confirmStatus('cancelled')}
-                        />
+                        <Button title="Mark complete" onPress={() => confirmStatus('completed')} />
+                        <Button title="Cancel event" danger onPress={() => confirmStatus('cancelled')} />
                     </View>
                 ) : null}
             </ScrollView>
@@ -359,9 +375,10 @@ export default function EventDetails() {
 }
 
 function Metadata({ label: title, icon, value }: { label: string; icon: keyof typeof Ionicons.glyphMap; value: string }) {
+    const { colors } = useAppTheme();
     return (
         <View>
-            <Text style={label}>{title}</Text>
+            <Text style={[label, { color: colors.muted }]}>{title}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
                 <Ionicons name={icon} size={17} color={colors.muted} />
                 <Text style={{ color: colors.text, fontWeight: '600', flex: 1 }}>{value}</Text>
@@ -369,24 +386,9 @@ function Metadata({ label: title, icon, value }: { label: string; icon: keyof ty
         </View>
     );
 }
-const panel = { backgroundColor: '#091122', borderColor: '#1e293b', borderWidth: 1, borderRadius: 16, padding: 17, marginBottom: 16 } as const;
-const section = {
-    backgroundColor: '#091122',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-} as const;
-const sectionTitle = { color: colors.text, fontSize: 16, fontWeight: '700' } as const;
-const label = { color: colors.muted, fontSize: 10, fontWeight: '700', letterSpacing: 1.7, textTransform: 'uppercase' } as const;
-const divider = { height: 1, backgroundColor: '#1e293b', marginVertical: 16 } as const;
-const iconButton = {
-    width: 40,
-    height: 40,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
-} as const;
+const panel = { borderWidth: 1, borderRadius: 16, padding: 17, marginBottom: 16 } as const;
+const section = { borderWidth: 1, borderRadius: 16, overflow: 'hidden', marginBottom: 16 } as const;
+const sectionTitle = { fontSize: 16, fontWeight: '700' } as const;
+const label = { fontSize: 10, fontWeight: '700', letterSpacing: 1.7, textTransform: 'uppercase' } as const;
+const divider = { height: 1, marginVertical: 16 } as const;
+const iconButton = { width: 40, height: 40, borderRadius: 11, borderWidth: 1, alignItems: 'center', justifyContent: 'center' } as const;

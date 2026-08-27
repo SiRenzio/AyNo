@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import { FormEventHandler, useRef } from 'react';
 
 // Components...
@@ -44,13 +45,18 @@ export default function DeleteUser() {
                     <DialogTrigger asChild>
                         <Button variant="destructive">Delete account</Button>
                     </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
-                        <DialogDescription>
-                            Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password
-                            to confirm you would like to permanently delete your account.
-                        </DialogDescription>
-                        <form className="space-y-6" onSubmit={deleteUser}>
+                    <DialogContent className="p-0">
+                        <div className="p-6 pb-2">
+                            <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
+                                <AlertTriangle className="size-5" />
+                            </span>
+                            <DialogTitle className="pr-8 text-xl">Delete your account?</DialogTitle>
+                            <DialogDescription className="mt-2 leading-6 text-slate-600 dark:text-slate-300">
+                                Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your
+                                password to confirm you would like to permanently delete your account.
+                            </DialogDescription>
+                        </div>
+                        <form className="space-y-5 px-6 pb-6" onSubmit={deleteUser}>
                             <div className="grid gap-2">
                                 <Label htmlFor="password" className="sr-only">
                                     Password
@@ -70,7 +76,7 @@ export default function DeleteUser() {
                                 <InputError message={errors.password} />
                             </div>
 
-                            <DialogFooter>
+                            <DialogFooter className="gap-2 sm:space-x-0">
                                 <DialogClose asChild>
                                     <Button variant="secondary" onClick={closeModal}>
                                         Cancel
@@ -78,7 +84,10 @@ export default function DeleteUser() {
                                 </DialogClose>
 
                                 <Button variant="destructive" disabled={processing} asChild>
-                                    <button type="submit">Delete account</button>
+                                    <button type="submit" className="gap-2">
+                                        <Trash2 className="size-4" />
+                                        Delete account
+                                    </button>
                                 </Button>
                             </DialogFooter>
                         </form>

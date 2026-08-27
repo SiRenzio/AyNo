@@ -44,11 +44,12 @@ class MobileEventController extends Controller
     {
         $reminders = Reminder::whereHas('event', fn ($query) => $query->where('user_id', $request->user()->id))
             ->where('remind_at', '<=', now())
-            ->with('event:id,title,location,starts_at')->latest('remind_at')->get()->map(fn ($reminder) => [
+            ->with('event:id,title,location,starts_at,status')->latest('remind_at')->get()->map(fn ($reminder) => [
                 'id' => $reminder->id, 'remind_at' => $reminder->remind_at->toIso8601String(),
-                'status' => $reminder->status, 'channel' => $reminder->channel,
+                'status' => $reminder->event->status === 'completed' || $reminder->event->starts_at->isPast() ? 'completed' : $reminder->status,
+                'channel' => $reminder->channel,
                 'read_at' => $reminder->read_at?->toIso8601String(),
-                'event' => ['id' => $reminder->event->id, 'title' => $reminder->event->title, 'location' => $reminder->event->location, 'starts_at' => $reminder->event->starts_at->toIso8601String()],
+                'event' => ['id' => $reminder->event->id, 'title' => $reminder->event->title, 'location' => $reminder->event->location, 'starts_at' => $reminder->event->starts_at->toIso8601String(), 'status' => $reminder->event->status],
             ]);
 
         return response()->json(['notifications' => $reminders]);
@@ -70,8 +71,14 @@ class MobileEventController extends Controller
     public function updateNotification(Request $request, Reminder $reminder): JsonResponse
     {
         $this->ensureReminderOwner($request, $reminder);
+        $reminder->loadMissing('event');
         abort_if($reminder->status === 'sent', 422, 'Sent reminders cannot be changed.');
         $data = $request->validate(['status' => ['required', 'in:pending,cancelled']]);
+        abort_if(
+            $data['status'] === 'pending' && ($reminder->event->status === 'completed' || $reminder->event->starts_at->isPast()),
+            422,
+            'Reminders for completed or past events cannot be retried.',
+        );
         $reminder->update([
             'status' => $data['status'],
             'failed_at' => $data['status'] === 'pending' ? null : $reminder->failed_at,

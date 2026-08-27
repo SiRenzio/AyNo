@@ -1,5 +1,6 @@
-import { Button, Field, Screen, colors, styles } from '@/components/native-ui';
+import { Button, Field, Screen, styles } from '@/components/native-ui';
 import { useAuth } from '@/context/auth-context';
+import { useAppTheme } from '@/context/theme-context';
 import { api } from '@/lib/api';
 import { syncLocalNotifications } from '@/lib/local-notifications';
 import { EventTemplate } from '@/lib/types';
@@ -16,6 +17,7 @@ const offsets = [
     { label: '1 day', value: 1440 },
 ];
 export default function CreateEvent() {
+    const { colors } = useAppTheme();
     const { token } = useAuth();
     const [title, setTitle] = useState('');
     const [location, setLocation] = useState('');
@@ -65,8 +67,8 @@ export default function CreateEvent() {
     return (
         <Screen>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                <Text style={styles.title}>New event</Text>
-                <Text style={styles.subtitle}>Add the details, checklist, and reminders.</Text>
+                <Text style={[styles.title, { color: colors.text }]}>New event</Text>
+                <Text style={[styles.subtitle, { color: colors.muted }]}>Add the details, checklist, and reminders.</Text>
                 <Field placeholder="Event title" value={title} onChangeText={setTitle} />
                 <Field placeholder="Location (optional)" value={location} onChangeText={setLocation} />
                 <Field
@@ -77,11 +79,17 @@ export default function CreateEvent() {
                     style={{ minHeight: 90, textAlignVertical: 'top' }}
                 />
                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <Pressable style={[styles.card, { flex: 1 }]} onPress={() => setMode('date')}>
+                    <Pressable
+                        style={[styles.card, { flex: 1, backgroundColor: colors.card, borderColor: colors.border }]}
+                        onPress={() => setMode('date')}
+                    >
                         <Text style={{ color: colors.muted }}>Date</Text>
                         <Text style={{ color: colors.text, marginTop: 5 }}>{date.toLocaleDateString()}</Text>
                     </Pressable>
-                    <Pressable style={[styles.card, { flex: 1 }]} onPress={() => setMode('time')}>
+                    <Pressable
+                        style={[styles.card, { flex: 1, backgroundColor: colors.card, borderColor: colors.border }]}
+                        onPress={() => setMode('time')}
+                    >
                         <Text style={{ color: colors.muted }}>Time</Text>
                         <Text style={{ color: colors.text, marginTop: 5 }}>
                             {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -104,7 +112,7 @@ export default function CreateEvent() {
                     {templates.map((t) => (
                         <Pressable
                             key={t.id}
-                            style={[styles.card, { width: 180, marginRight: 10 }]}
+                            style={[styles.card, { width: 180, marginRight: 10, backgroundColor: colors.card, borderColor: colors.border }]}
                             onPress={() => {
                                 setTitle(t.name);
                                 setItems(t.items);
@@ -119,7 +127,18 @@ export default function CreateEvent() {
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Field placeholder="Add an item" value={item} onChangeText={setItem} style={{ flex: 1 }} />
                     <Pressable
-                        style={[styles.button, { marginTop: 0, height: 50 }]}
+                        disabled={!item.trim()}
+                        style={[
+                            styles.button,
+                            {
+                                marginTop: 0,
+                                height: 50,
+                                minWidth: 72,
+                                justifyContent: 'center',
+                                backgroundColor: colors.primary,
+                                opacity: item.trim() ? 1 : 0.5,
+                            },
+                        ]}
                         onPress={() => {
                             if (item.trim()) {
                                 setItems([...items, item.trim()]);
@@ -131,7 +150,11 @@ export default function CreateEvent() {
                     </Pressable>
                 </View>
                 {items.map((value, index) => (
-                    <Pressable key={`${value}-${index}`} style={styles.card} onPress={() => setItems(items.filter((_, i) => i !== index))}>
+                    <Pressable
+                        key={`${value}-${index}`}
+                        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+                        onPress={() => setItems(items.filter((_, i) => i !== index))}
+                    >
                         <Text style={{ color: colors.text }}>○ {value}</Text>
                         <Text style={{ color: colors.muted, fontSize: 11, marginTop: 4 }}>Tap to remove</Text>
                     </Pressable>
@@ -145,12 +168,12 @@ export default function CreateEvent() {
                             style={{
                                 borderWidth: 1,
                                 borderColor: selected.includes(o.value) ? '#60a5fa' : colors.border,
-                                backgroundColor: selected.includes(o.value) ? '#172554' : colors.card,
+                                backgroundColor: selected.includes(o.value) ? `${colors.primary}18` : colors.card,
                                 padding: 11,
                                 borderRadius: 10,
                             }}
                         >
-                            <Text style={{ color: selected.includes(o.value) ? '#93c5fd' : colors.muted }}>{o.label} before</Text>
+                            <Text style={{ color: selected.includes(o.value) ? colors.primary : colors.muted }}>{o.label} before</Text>
                         </Pressable>
                     ))}
                 </View>

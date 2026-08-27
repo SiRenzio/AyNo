@@ -2,6 +2,7 @@
 node_modules/
 npm-debug.log
 yarn-error.log
+*.log
 
 # Laravel 4 specific
 bootstrap/compiled.php
@@ -17,6 +18,8 @@ public_html/hot
 
 storage/*.key
 .env
+.env.*
+!.env.example
 Homestead.yaml
 Homestead.json
 /.vagrant
@@ -29,7 +32,22 @@ Homestead.json
 /storage/framework/testing/*
 /storage/framework/views/*
 /storage/logs/*
-.env.backup
-.env.production
 .phpactor.json
 auth.json
+
+# Credentials and private keys
+credentials.json
+credentials.*.json
+service-account*.json
+google-services.json
+GoogleService-Info.plist
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Local Expo and verification artifacts
+mobile/.expo/
+mobile/dist-*-check/

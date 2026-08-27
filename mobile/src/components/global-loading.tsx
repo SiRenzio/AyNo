@@ -1,7 +1,9 @@
+import { useAppTheme } from '@/context/theme-context';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, DeviceEventEmitter, Easing, Text } from 'react-native';
 
 export function GlobalLoading() {
+    const { colors } = useAppTheme();
     const [rendered, setRendered] = useState(false);
     const renderedRef = useRef(false);
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,7 +42,8 @@ export function GlobalLoading() {
             });
         }
         const subscription = DeviceEventEmitter.addListener('apiLoadingChanged', (count: number) => {
-            if (count > 0) show(); else hide();
+            if (count > 0) show();
+            else hide();
         });
         return () => {
             subscription.remove();
@@ -65,7 +68,7 @@ export function GlobalLoading() {
                 borderRadius: 18,
                 paddingHorizontal: 12,
                 paddingVertical: 8,
-                backgroundColor: '#172554ee',
+                backgroundColor: colors.card,
                 borderWidth: 1,
                 borderColor: '#3b82f666',
                 opacity: progress,

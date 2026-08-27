@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { PropsWithChildren, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, TextInputProps, View } from 'react-native';
+import { PropsWithChildren, useState } from 'react';
+import { Animated, Image, Pressable, ScrollView, Text, TextInput, TextInputProps, View } from 'react-native';
 
-import { Screen, colors } from '@/components/native-ui';
+import { Screen } from '@/components/native-ui';
+import { useAppTheme } from '@/context/theme-context';
 
 export function AuthScreen({
     mode,
@@ -20,15 +21,7 @@ export function AuthScreen({
     title: string;
     description: string;
 }>) {
-    const headerPosition = useRef(new Animated.Value(mode === 'register' ? 1 : 0)).current;
-    useEffect(() => {
-        Animated.timing(headerPosition, {
-            toValue: mode === 'register' ? 1 : 0,
-            duration: 420,
-            easing: Easing.inOut(Easing.cubic),
-            useNativeDriver: true,
-        }).start();
-    }, [headerPosition, mode]);
+    const { colors } = useAppTheme();
     return (
         <Screen>
             <View
@@ -41,14 +34,10 @@ export function AuthScreen({
                 showsVerticalScrollIndicator={false}
             >
                 <View style={{ width: '100%', maxWidth: 500, alignSelf: 'center' }}>
-                    <Animated.View
-                        style={{
-                            transform: [{ translateY: headerPosition.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
-                        }}
-                    >
+                    <View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 30 }}>
                             <View
-                                style={{ width: 58, height: 58, borderRadius: 18, overflow: 'hidden', backgroundColor: '#102450', marginRight: 13 }}
+                                style={{ width: 58, height: 58, borderRadius: 18, overflow: 'hidden', backgroundColor: colors.card, marginRight: 13 }}
                             >
                                 <Image
                                     source={require('../../assets/images/ayno-bird.png')}
@@ -58,41 +47,36 @@ export function AuthScreen({
                             </View>
                             <View>
                                 <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800', letterSpacing: -0.5 }}>AyNo</Text>
-                                <Text style={{ color: '#64748b', fontSize: 9, fontWeight: '700', letterSpacing: 1.7 }}>NEVER LEAVE IT BEHIND</Text>
+                                <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '700', letterSpacing: 1.7 }}>NEVER LEAVE IT BEHIND</Text>
                             </View>
                         </View>
                         <Text style={{ color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -1 }}>{title}</Text>
-                        <Text style={{ color: '#94a3b8', fontSize: 15, lineHeight: 22, marginTop: 7, marginBottom: 24 }}>{description}</Text>
-                    </Animated.View>
-                    <Animated.View
-                        style={{
-                            transform: [{ translateY: headerPosition.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
-                        }}
-                    >
+                        <Text style={{ color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: 7, marginBottom: 24 }}>{description}</Text>
+                    </View>
+                    <View>
                         <View
                             style={{
                                 flexDirection: 'row',
                                 padding: 4,
                                 borderRadius: 13,
                                 borderWidth: 1,
-                                borderColor: '#ffffff0d',
-                                backgroundColor: '#ffffff0e',
+                                borderColor: colors.border,
+                                backgroundColor: colors.card,
                                 marginBottom: 24,
                             }}
                         >
                             <AuthTab active={mode === 'login'} label="Sign in" onPress={() => onModeChange('login')} />
                             <AuthTab active={mode === 'register'} label="Register" onPress={() => onModeChange('register')} />
                         </View>
-                    </Animated.View>
+                    </View>
                     <Animated.View
                         style={{
                             opacity: formProgress,
-                            transform: [{ translateY: headerPosition.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
                         }}
                     >
                         {children}
                     </Animated.View>
-                    <Animated.View style={{ transform: [{ translateY: headerPosition.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }] }}>
+                    <View>
                         <Pressable
                             disabled={submit.disabled}
                             onPress={submit.onPress}
@@ -107,8 +91,8 @@ export function AuthScreen({
                         >
                             <Animated.Text style={{ color: '#fff', fontWeight: '700', opacity: formProgress }}>{submit.title}</Animated.Text>
                         </Pressable>
-                    </Animated.View>
-                    <Text style={{ textAlign: 'center', color: '#475569', fontSize: 11, marginTop: 28 }}>AyNo Personal Reminder Checklist</Text>
+                    </View>
+                    <Text style={{ textAlign: 'center', color: colors.muted, fontSize: 11, marginTop: 28 }}>AyNo Personal Reminder Checklist</Text>
                 </View>
             </ScrollView>
         </Screen>
@@ -116,37 +100,39 @@ export function AuthScreen({
 }
 
 function AuthTab({ active, label, onPress }: { active: boolean; label: string; onPress: () => void }) {
+    const { colors } = useAppTheme();
     return (
         <Pressable
             onPress={onPress}
-            style={{ flex: 1, alignItems: 'center', paddingVertical: 11, borderRadius: 9, backgroundColor: active ? '#162a50' : 'transparent' }}
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 11, borderRadius: 9, backgroundColor: active ? colors.primary : 'transparent' }}
         >
-            <Text style={{ color: active ? '#fff' : '#64748b', fontWeight: '700' }}>{label}</Text>
+            <Text style={{ color: active ? '#fff' : colors.muted, fontWeight: '700' }}>{label}</Text>
         </Pressable>
     );
 }
 
 export function AuthField({ label, secure, ...props }: TextInputProps & { label: string; secure?: boolean }) {
+    const { colors } = useAppTheme();
     const [visible, setVisible] = useState(false);
     return (
         <View style={{ marginBottom: 17 }}>
-            <Text style={{ color: '#94a3b8', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 }}>{label.toUpperCase()}</Text>
+            <Text style={{ color: colors.muted, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 }}>{label.toUpperCase()}</Text>
             <View>
                 <TextInput
                     {...props}
                     autoComplete="off"
                     importantForAutofill="no"
                     secureTextEntry={secure && !visible}
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={colors.muted}
                     selectionColor="#60a5fa"
                     cursorColor="#60a5fa"
                     underlineColorAndroid="transparent"
                     style={{
-                        color: '#f8fafc',
+                        color: colors.text,
                         height: 52,
                         borderWidth: 1,
-                        borderColor: '#ffffff22',
-                        backgroundColor: '#ffffff0e',
+                        borderColor: colors.border,
+                        backgroundColor: colors.card,
                         borderRadius: 12,
                         paddingHorizontal: 15,
                         paddingRight: secure ? 48 : 15,
@@ -159,7 +145,7 @@ export function AuthField({ label, secure, ...props }: TextInputProps & { label:
                         onPress={() => setVisible((value) => !value)}
                         style={{ position: 'absolute', right: 6, top: 6, padding: 10 }}
                     >
-                        <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={19} color="#64748b" />
+                        <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={19} color={colors.muted} />
                     </Pressable>
                 ) : null}
             </View>

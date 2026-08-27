@@ -4,10 +4,12 @@ import { Alert, Animated, Easing, LayoutAnimation, Text } from 'react-native';
 
 import { AuthField, AuthScreen } from '@/components/auth-screen';
 import { useAuth } from '@/context/auth-context';
+import { useAppTheme } from '@/context/theme-context';
 
 type Mode = 'login' | 'register';
 
 export default function Auth() {
+    useAppTheme();
     const { signIn, signUp } = useAuth();
     const [mode, setMode] = useState<Mode>('login');
     const [username, setUsername] = useState('');
