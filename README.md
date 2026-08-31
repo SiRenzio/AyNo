@@ -79,35 +79,24 @@ Personal Reminder Checklist
         - Added reminder emails with timezone-aware event details, location, notes, checklist states, and a secure event link.
         - Added event editing, completion, cancellation, permanent deletion, and automatic cancellation of pending reminders.
         - Installed Laravel Reverb with Laravel Echo and integrated the WebSocket server into the local development command.
+    - 21/08/2026
+        - Started the AyNo React Native application with Expo SDK 57 and Expo Router.
+        - Added Sanctum token authentication and ownership-scoped mobile API endpoints for events and checklists.
+        - Added secure mobile sessions, registration, login, event and reminder views, checklist updates, event completion/cancellation, and profile sign-out.
+        - Converted the responsive web workflow into native dashboard, event creation, template, checklist, reminder, search/filter, edit, status, delete, notification-management, profile, and password screens.
+
+# React Native app
+
+The Expo application lives in `mobile/` and uses the same users, events, checklists, and reminders as the Laravel web application.
+
+1. Copy `mobile/.env.example` to `mobile/.env`.
+2. Start Laravel so the device can reach it: `php artisan serve --host=0.0.0.0 --port=8000`.
+3. For a physical phone, replace `10.0.2.2` in `mobile/.env` with this computer's LAN IP. Android emulators can use the example value as-is.
+4. In a second terminal, run `cd mobile` and `npm start`, then open the app in Expo Go or an emulator.
+
+Mobile access tokens are stored with Expo SecureStore. Run `php artisan migrate` after pulling the mobile API changes so Sanctum's token table is available.
+
+adb install -r "/c/Users/cjgas/Documents/Laravel Projects/AyNo/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
 
 # TODO
-
-    - Reminder scheduling
-        A user can add multiple reminders to one event. The MVP uses email as the delivery channel.
-        - Presets: one day, two hours, one hour, or thirty minutes before the event.
-        - A custom date and time may also be selected.
-        - Reminder states: Pending, Sent, Failed, and Cancelled.
-        - Users can add, change, remove, and inspect pending reminders.
-        - Laravel's scheduler finds due reminders; queued jobs deliver them.
-        - A reminder is marked Sent only after successful delivery.
-        - Completed, cancelled, or deleted events cannot produce new deliveries.
-        - Preset reminders are stored as offsets; custom reminders are stored as exact times.
-        Acceptance criteria
-        - A reminder cannot be scheduled after its event or in the past.
-        - A due reminder sends an email to the event owner.
-        - Scheduler reruns and job retries do not create duplicate emails.
-        - Failed reminders may be retried safely
-
-    - Email reminder content
-        - User's name, event title, event date/time, and optional location.
-        - Optional event notes and the complete checklist with completion states.
-        - A secure link that opens the event after authentication.
-        - Dates formatted in the user's configured timezone.
-        Reminder: Claim Your Diploma
-        Your event is scheduled for August 25 at 9:00 AM.
-        Location: University Registrar
-        Things to bring:
-        [x] Valid ID
-        [ ] Official receipt
-        [ ] Claim stub
-        View Checklist
+    Convert to standalone app that uses device storage for storing data.

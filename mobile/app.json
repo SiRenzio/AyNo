@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "AyNo",
+    "slug": "ayno-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/ayno-icon.png",
+    "scheme": "ayno",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/ayno-icon.png"
+    },
+    "android": {
+      "package": "com.ayno.mobile",
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#071226",
+        "foregroundImage": "./assets/images/ayno-bird.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-notifications",
+        {
+          "color": "#3b82f6",
+          "defaultChannel": "event-reminders-v2"
+        }
+      ],
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#071226",
+          "image": "./assets/images/ayno-bird.png",
+          "imageWidth": 150
+        }
+      ],
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      "expo-sqlite"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "579b5919-8b49-4cf9-bf89-f250411b79ed"
+      }
+    }
+  }
+}

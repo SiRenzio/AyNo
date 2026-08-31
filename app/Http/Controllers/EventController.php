@@ -134,7 +134,7 @@ class EventController extends Controller
                 'status' => $data['status'],
                 'completed_at' => $data['status'] === 'completed' ? now() : null,
             ]);
-            $event->reminders()->where('status', 'pending')->update(['status' => 'cancelled']);
+            $event->resolveReminders();
         });
 
         return back()->with('success', $data['status'] === 'completed' ? 'Event marked complete.' : 'Event cancelled.');
@@ -143,7 +143,10 @@ class EventController extends Controller
     public function destroy(Request $request, Event $event): RedirectResponse
     {
         $this->ensureOwner($request, $event);
-        $event->delete();
+        DB::transaction(function () use ($event): void {
+            $event->resolveReminders();
+            $event->delete();
+        });
 
         return to_route('events.index')->with('success', 'Event permanently deleted.');
     }

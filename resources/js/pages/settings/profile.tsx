@@ -9,8 +9,10 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAppearance } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { Moon, Sun } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,6 +23,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
+    const { appearance, updateAppearance } = useAppearance();
+    const isDark = appearance === 'dark' || (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: auth.user.name,
@@ -98,7 +102,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         )}
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing} className="bg-blue-600 text-white hover:bg-blue-500">Save changes</Button>
+                            <Button disabled={processing} className="bg-blue-600 text-white hover:bg-blue-500">
+                                Save changes
+                            </Button>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -111,6 +117,23 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             </Transition>
                         </div>
                     </form>
+                </div>
+
+                <div className="space-y-4">
+                    <HeadingSmall title="Quick theme" description="Switch the whole app between light and dark mode" />
+                    <button
+                        type="button"
+                        onClick={() => updateAppearance(isDark ? 'light' : 'dark')}
+                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-blue-500/50 hover:bg-blue-500/5 dark:border-slate-700 dark:bg-[#080f20]"
+                    >
+                        <span>
+                            <span className="block text-sm font-semibold">{isDark ? 'Switch to light mode' : 'Switch to dark mode'}</span>
+                            <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">Your choice is saved on this device.</span>
+                        </span>
+                        <span className="flex size-11 items-center justify-center rounded-xl bg-blue-600 text-white">
+                            {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+                        </span>
+                    </button>
                 </div>
 
                 <DeleteUser />

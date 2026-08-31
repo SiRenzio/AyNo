@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\MobileNotificationsUpdated;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,5 +29,20 @@ class Event extends Model
     public function reminders(): HasMany
     {
         return $this->hasMany(Reminder::class)->orderBy('remind_at');
+    }
+
+    public function resolveReminders(): void
+    {
+        $resolvedAt = now();
+
+        $this->reminders()
+            ->where('status', 'pending')
+            ->update(['status' => 'cancelled', 'read_at' => $resolvedAt]);
+
+        $this->reminders()
+            ->whereNull('read_at')
+            ->update(['read_at' => $resolvedAt]);
+
+        broadcast(new MobileNotificationsUpdated((int) $this->user_id));
     }
 }
