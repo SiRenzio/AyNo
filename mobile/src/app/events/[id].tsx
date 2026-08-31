@@ -113,6 +113,7 @@ export default function EventDetails() {
     }
     async function status(value: 'completed' | 'cancelled') {
         await api(`/events/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status: value }) }, token);
+        await syncLocalNotifications(token);
         router.replace('/(tabs)/home');
     }
     function confirmStatus(value: 'completed' | 'cancelled') {
@@ -140,6 +141,7 @@ export default function EventDetails() {
                 style: 'destructive',
                 onPress: async () => {
                     await api(`/events/${id}`, { method: 'DELETE' }, token);
+                    await syncLocalNotifications(token);
                     router.replace('/(tabs)');
                 },
             },

@@ -37,8 +37,8 @@ class MobileAuthController extends Controller
             'password' => ['required', 'string'],
             'device_name' => ['required', 'string', 'max:255'],
         ]);
-        $login = strtolower($data['login']);
-        $user = User::whereRaw('LOWER(email) = ?', [$login])->orWhere('username', $login)->first();
+        $login = strtolower(trim($data['login']));
+        $user = User::whereRaw('LOWER(email) = ?', [$login])->orWhereRaw('LOWER(username) = ?', [$login])->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages(['login' => ['The provided credentials are incorrect.']]);

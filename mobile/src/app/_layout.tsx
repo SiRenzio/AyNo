@@ -1,6 +1,5 @@
 import { GlobalLoading } from '@/components/global-loading';
 import { NotificationSync } from '@/components/notification-sync';
-import { ReverbSync } from '@/components/reverb-sync';
 import { AuthProvider } from '@/context/auth-context';
 import { AppThemeProvider, useAppTheme } from '@/context/theme-context';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -12,7 +11,6 @@ export default function RootLayout() {
         <AppThemeProvider>
             <AuthProvider>
                 <NotificationSync />
-                <ReverbSync />
                 <GlobalLoading />
                 <ThemedNavigation />
             </AuthProvider>

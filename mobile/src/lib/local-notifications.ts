@@ -8,6 +8,7 @@ type PushReminder = { id: number; remind_at: string; event: { id: number; title:
 LogBox.ignoreLogs(['expo-notifications: Android Push notifications']);
 
 let handlerConfigured = false;
+let notificationSyncQueue: Promise<void> = Promise.resolve();
 export const notificationsAvailable = Constants.appOwnership !== 'expo' && Platform.OS !== 'web';
 
 export async function getNotificationsModule() {
@@ -21,7 +22,7 @@ export async function getNotificationsModule() {
   return Notifications;
 }
 
-export async function syncLocalNotifications(token: string | null) {
+async function performLocalNotificationSync(token: string | null) {
   if (!token || !notificationsAvailable) return;
   const Notifications = await getNotificationsModule();
   if (Platform.OS === 'android') {
@@ -47,4 +48,11 @@ export async function syncLocalNotifications(token: string | null) {
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date, channelId: 'event-reminders-v2' },
     });
   }
+}
+
+export function syncLocalNotifications(token: string | null) {
+  notificationSyncQueue = notificationSyncQueue
+    .catch(() => undefined)
+    .then(() => performLocalNotificationSync(token));
+  return notificationSyncQueue;
 }

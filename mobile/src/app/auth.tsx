@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Alert, Animated, Easing, LayoutAnimation, Text } from 'react-native';
+import { Animated, Easing, LayoutAnimation, Text } from 'react-native';
 
 import { AuthField, AuthScreen } from '@/components/auth-screen';
 import { useAuth } from '@/context/auth-context';
 import { useAppTheme } from '@/context/theme-context';
+import { ApiError } from '@/lib/api';
 
 type Mode = 'login' | 'register';
+type FieldErrors = Partial<Record<'login' | 'username' | 'email' | 'password' | 'password_confirmation', string>>;
 
 export default function Auth() {
     useAppTheme();
@@ -19,11 +21,13 @@ export default function Auth() {
     const [confirm, setConfirm] = useState('');
     const [busy, setBusy] = useState(false);
     const [transitioning, setTransitioning] = useState(false);
+    const [errors, setErrors] = useState<FieldErrors>({});
     const formProgress = useRef(new Animated.Value(1)).current;
 
     function changeMode(nextMode: Mode) {
         if (busy || transitioning || nextMode === mode) return;
         setTransitioning(true);
+        setErrors({});
         Animated.timing(formProgress, {
             toValue: 0,
             duration: 260,
@@ -47,12 +51,19 @@ export default function Auth() {
 
     async function submit() {
         setBusy(true);
+        setErrors({});
         try {
             if (mode === 'login') await signIn({ login, password });
             else await signUp({ username, email, password, password_confirmation: confirm });
             router.replace('/(tabs)/home');
         } catch (error) {
-            Alert.alert(mode === 'login' ? 'Could not sign in' : 'Could not register', error instanceof Error ? error.message : 'Try again.');
+            if (error instanceof ApiError) {
+                const fieldErrors = Object.fromEntries(Object.entries(error.errors).map(([field, messages]) => [field, messages[0]])) as FieldErrors;
+                if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+                else setErrors({ [mode === 'login' ? 'login' : 'email']: error.message });
+            } else {
+                setErrors({ [mode === 'login' ? 'login' : 'email']: error instanceof Error ? error.message : 'Try again.' });
+            }
         } finally {
             setBusy(false);
         }
@@ -77,7 +88,17 @@ export default function Auth() {
             }
         >
             {mode === 'register' ? (
-                <AuthField label="Username" autoCapitalize="none" placeholder="Choose a username" value={username} onChangeText={setUsername} />
+                <AuthField
+                    label="Username"
+                    autoCapitalize="none"
+                    placeholder="Choose a username"
+                    value={username}
+                    error={errors.username}
+                    onChangeText={(value) => {
+                        setUsername(value);
+                        setErrors((current) => ({ ...current, username: undefined }));
+                    }}
+                />
             ) : null}
             {mode === 'login' ? (
                 <AuthField
@@ -85,7 +106,11 @@ export default function Auth() {
                     autoCapitalize="none"
                     placeholder="Username or email address"
                     value={login}
-                    onChangeText={setLogin}
+                    error={errors.login}
+                    onChangeText={(value) => {
+                        setLogin(value);
+                        setErrors((current) => ({ ...current, login: undefined }));
+                    }}
                 />
             ) : (
                 <AuthField
@@ -94,7 +119,11 @@ export default function Auth() {
                     keyboardType="email-address"
                     placeholder="you@email.com"
                     value={email}
-                    onChangeText={setEmail}
+                    error={errors.email}
+                    onChangeText={(value) => {
+                        setEmail(value);
+                        setErrors((current) => ({ ...current, email: undefined }));
+                    }}
                 />
             )}
             <AuthField
@@ -103,7 +132,11 @@ export default function Auth() {
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 placeholder={mode === 'login' ? 'Enter your password' : 'Create password'}
                 value={password}
-                onChangeText={setPassword}
+                error={errors.password}
+                onChangeText={(value) => {
+                    setPassword(value);
+                    setErrors((current) => ({ ...current, password: undefined }));
+                }}
             />
             {mode === 'register' ? (
                 <AuthField
@@ -112,7 +145,11 @@ export default function Auth() {
                     autoComplete="new-password"
                     placeholder="Repeat password"
                     value={confirm}
-                    onChangeText={setConfirm}
+                    error={errors.password_confirmation}
+                    onChangeText={(value) => {
+                        setConfirm(value);
+                        setErrors((current) => ({ ...current, password_confirmation: undefined }));
+                    }}
                 />
             ) : null}
             {mode === 'register' ? (

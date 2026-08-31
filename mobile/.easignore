@@ -1,0 +1,17 @@
+node_modules/
+.expo/
+.env
+.env.*
+!.env.example
+
+dist*/
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/app/.cxx/
+
+.vscode/
+.claude/
+*.log
+npm-debug.log*

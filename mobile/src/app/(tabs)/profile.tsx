@@ -3,11 +3,12 @@ import { Button, Field, Screen, styles } from '@/components/native-ui';
 import { useAuth } from '@/context/auth-context';
 import { useAppTheme } from '@/context/theme-context';
 import { api } from '@/lib/api';
+import { getNotificationsModule, notificationsAvailable } from '@/lib/local-notifications';
 import { sessionStorage } from '@/lib/session-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 export default function Profile() {
     const { user, token, signOut } = useAuth();
@@ -16,6 +17,7 @@ export default function Profile() {
     const [email, setEmail] = useState(user?.email ?? '');
     const [compact, setCompact] = useState(false);
     const [showSignOut, setShowSignOut] = useState(false);
+    const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
     useEffect(() => {
         setName(user?.name ?? '');
@@ -37,6 +39,13 @@ export default function Profile() {
     function updateCompact(value: boolean) {
         setCompact(value);
         void sessionStorage.set('compact-layout', String(value));
+    }
+
+    async function deleteAccount() {
+        await api('/account', { method: 'DELETE' }, token);
+        if (notificationsAvailable) await (await getNotificationsModule()).cancelAllScheduledNotificationsAsync();
+        await signOut();
+        router.replace('/auth');
     }
 
     return (
@@ -113,6 +122,12 @@ export default function Profile() {
                     </View>
                 </View>
                 <Button title="Sign out" danger onPress={() => setShowSignOut(true)} />
+                <Pressable
+                    onPress={() => setShowDeleteAccount(true)}
+                    style={{ minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: 12 }}
+                >
+                    <Text style={{ color: colors.danger, fontWeight: '700' }}>Delete account and all data</Text>
+                </Pressable>
             </ScrollView>
             <ConfirmDialog
                 visible={showSignOut}
@@ -125,6 +140,19 @@ export default function Profile() {
                 onConfirm={() => {
                     setShowSignOut(false);
                     void signOut().then(() => router.replace('/auth'));
+                }}
+            />
+            <ConfirmDialog
+                visible={showDeleteAccount}
+                title="Delete this account?"
+                message="This permanently erases your profile, events, checklist items, reminders, and notification history from this device. This cannot be undone."
+                cancelLabel="Keep account"
+                confirmLabel="Delete everything"
+                danger
+                onCancel={() => setShowDeleteAccount(false)}
+                onConfirm={() => {
+                    setShowDeleteAccount(false);
+                    void deleteAccount();
                 }}
             />
         </Screen>

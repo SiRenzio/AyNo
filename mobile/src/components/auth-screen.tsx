@@ -111,7 +111,7 @@ function AuthTab({ active, label, onPress }: { active: boolean; label: string; o
     );
 }
 
-export function AuthField({ label, secure, ...props }: TextInputProps & { label: string; secure?: boolean }) {
+export function AuthField({ label, secure, error, ...props }: TextInputProps & { label: string; secure?: boolean; error?: string }) {
     const { colors } = useAppTheme();
     const [visible, setVisible] = useState(false);
     return (
@@ -131,7 +131,7 @@ export function AuthField({ label, secure, ...props }: TextInputProps & { label:
                         color: colors.text,
                         height: 52,
                         borderWidth: 1,
-                        borderColor: colors.border,
+                        borderColor: error ? colors.danger : colors.border,
                         backgroundColor: colors.card,
                         borderRadius: 12,
                         paddingHorizontal: 15,
@@ -149,6 +149,7 @@ export function AuthField({ label, secure, ...props }: TextInputProps & { label:
                     </Pressable>
                 ) : null}
             </View>
+            {error ? <Text style={{ color: colors.danger, fontSize: 12, lineHeight: 17, marginTop: 6 }}>{error}</Text> : null}
         </View>
     );
 }
